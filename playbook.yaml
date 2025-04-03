@@ -1,0 +1,55 @@
+ - name: Install and Configure Nginx
+   hosts: webserver
+   become: yes
+   tasks:
+
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Start Nginx and Enable on Boot
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Copy Custom HTML File
+      copy:
+        src: contentfile.html
+        dest: /usr/share/nginx/html/index.html
+
+    - name: Install dependencies for Ansible modules
+      yum:
+        name:
+          - firewalld
+          - python3-firewall
+        state: present
+
+    - name: Start and enable Firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+      notify: Restart Firewalld 
+
+    - name: Allow HTTP Traffic in Firewall
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+      notify: Restart Nginx
+
+  
+   handlers:
+     - name: Restart Firewalld
+       service:
+         name: firewalld
+         state: restarted
+
+     - name: Restart Nginx
+       service:
+         name: nginx
+         state: restarted 
+
+
